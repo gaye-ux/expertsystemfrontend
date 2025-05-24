@@ -5,7 +5,7 @@ import ProfessionalCard from "../components/CardComponent/ProfessionalCard";
 import RecruiterCard from "../components/CardComponent/RecruiterCard";
 import JobSeekerCard from "../components/CardComponent/JobSeekerCard";
 
-const HomePage = () => {
+const CardsPage = () => {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Get Expert Help in Minutes And Recruit the best professionals</h1>
@@ -15,7 +15,7 @@ const HomePage = () => {
         className="w-full p-3 mb-6 border rounded-lg"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {users.map((user) => {
           switch (user.role) {
             case "expert":
@@ -35,4 +35,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default CardsPage;

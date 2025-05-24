@@ -1,9 +1,13 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/HomePage";
+import CardsPage from "./pages/CardsPage";
 import ExpertDetailPage from "./pages/ExpertDetailPage";
 import Navbar from "./components/NavbarComponent/Navbar";
 import ProfessionalDetailPage from "./pages/ProfessionalDetailPage";
+import JobSeekerDetailPage from "./pages/JobSeekerDetailPage";
+import RecruiterDetailPage from "./pages/RecruiterDetailPage";
+import Signup from "./components/AuthComponent/SignUp";
+import Login from "./components/AuthComponent/Login";
 
 
 function App() {
@@ -17,9 +21,13 @@ function App() {
         {/* Main content with route handling */}
         <main className="container mx-auto px-4 py-8">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<CardsPage />} />
             <Route path="/experts/:id" element={<ExpertDetailPage />} />
             <Route path="/professionals/:id" element={<ProfessionalDetailPage />} />
+            <Route path="/jobseekers/:id" element={<JobSeekerDetailPage />}/>
+            <Route path="/recruiters/:id" element={<RecruiterDetailPage />}/>
+            <Route path="/signup" element={<Signup />}/>
+            <Route path="/login" element={<Login />}/>
           </Routes>
         </main>
 
