@@ -4,19 +4,32 @@ import ExpertCard from "../components/CardComponent/ExpertCard";
 import ProfessionalCard from "../components/CardComponent/ProfessionalCard";
 import RecruiterCard from "../components/CardComponent/RecruiterCard";
 import JobSeekerCard from "../components/CardComponent/JobSeekerCard";
+import { useSearch } from "../context/SearchContext";
 
 const CardsPage = () => {
-  return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Get Expert Help in Minutes And Recruit the best professionals</h1>
-      <input
-        type="text"
-        placeholder="What do you need help with?"
-        className="w-full p-3 mb-6 border rounded-lg"
-      />
+  const { searchQuery } = useSearch();
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-6">
-        {users.map((user) => {
+  const filteredUsers = users.filter((user) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query) ||
+      user.title?.toLowerCase().includes(query) ||
+      user.description?.toLowerCase().includes(query)||
+      user.interest?.toLowerCase().includes(query)||
+      user.interest?.toLowerCase().includes(query)||
+      user.email?.toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div className="pt-28 p-8 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">
+        Get Expert Help in Minutes And Recruit the Best Professionals
+      </h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredUsers.map((user) => {
           switch (user.role) {
             case "expert":
               return <ExpertCard key={user.id} expert={user} />;

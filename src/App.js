@@ -6,12 +6,18 @@ import Navbar from "./components/NavbarComponent/Navbar";
 import ProfessionalDetailPage from "./pages/ProfessionalDetailPage";
 import JobSeekerDetailPage from "./pages/JobSeekerDetailPage";
 import RecruiterDetailPage from "./pages/RecruiterDetailPage";
-import Signup from "./components/AuthComponent/SignUp";
 import Login from "./components/AuthComponent/Login";
+import Signup from "./components/AuthComponent/Signup";
+import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
+import { SearchProvider } from "./context/SearchContext";
 
 
 function App() {
+
   return (
+
+  
     <Router>
       <div className="App min-h-screen bg-gray-50">
       
@@ -21,13 +27,15 @@ function App() {
         {/* Main content with route handling */}
         <main className="container mx-auto px-4 py-8">
           <Routes>
-            <Route path="/" element={<CardsPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/users" element={<CardsPage />} />
             <Route path="/experts/:id" element={<ExpertDetailPage />} />
             <Route path="/professionals/:id" element={<ProfessionalDetailPage />} />
             <Route path="/jobseekers/:id" element={<JobSeekerDetailPage />}/>
             <Route path="/recruiters/:id" element={<RecruiterDetailPage />}/>
             <Route path="/signup" element={<Signup />}/>
             <Route path="/login" element={<Login />}/>
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </main>
 
@@ -39,6 +47,7 @@ function App() {
         </footer>
       </div>
     </Router>
+    
   );
 }
 
