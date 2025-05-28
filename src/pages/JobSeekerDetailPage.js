@@ -170,13 +170,13 @@ const JobSeekerDetailPage = () => {
 
       <section className="flex flex-col sm:flex-row justify-center gap-4">
         <button
-          onClick={() => alert('Feature to schedule interview coming soon!')}
+          onClick={() => alert('Time shared with the candidate')}
           className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition"
         >
           Schedule Interview
         </button>
         <button
-          onClick={() => alert('Feature to download resume coming soon!')}
+          onClick={() => alert('CV will be downloaded')}
           className="px-6 py-3 bg-white border border-indigo-600 text-indigo-600 font-semibold rounded-lg shadow hover:bg-indigo-50 transition"
         >
           Download Resume

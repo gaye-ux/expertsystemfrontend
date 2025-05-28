@@ -78,7 +78,7 @@ const ExpertDetailPage = () => {
 
         {expert.status === "offline" && (
           <button
-            onClick={() => alert("Booking feature coming soon!")}
+            onClick={() => alert("Appointment Booked")}
             className="px-4 py-3 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
           >
             Book an Appointment

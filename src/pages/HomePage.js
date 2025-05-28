@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   FaRegThumbsUp,
   FaRegCommentDots,
@@ -21,6 +21,9 @@ const HomePage = () => {
   const [showProfileMobile, setShowProfileMobile] = useState(false);
   const [connectionRequests, setConnectionRequests] = useState({});
   const [likedPosts, setLikedPosts] = useState({});
+  const [searchText, setSearchText] = useState("");
+  const [shareMenuOpenFor, setShareMenuOpenFor] = useState(null);
+
 
   const observer = useRef();
   const postsPerPage = 5;
@@ -76,15 +79,46 @@ const HomePage = () => {
     [loading, loadMorePosts]
   );
 
-  const { searchQuery } = useSearch();
-
   const handleConnect = (id) => {
-    setConnectionRequests((prev) => ({ ...prev, [id]: true }));
+    setConnectionRequests((prev) => ({
+      ...prev,
+      [id]: !prev[id],  
+    }));
   };
+
+  const shareToFacebook = (post) => {
+    const url = encodeURIComponent(post.url || window.location.href);
+    const text = encodeURIComponent(post.content || "");
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`;
+    window.open(fbShareUrl, "_blank", "noopener,noreferrer");
+    setShareMenuOpenFor(null);
+  };
+  
+  const shareToWhatsApp = (post) => {
+    const text = encodeURIComponent(post.content + " " + (post.url || window.location.href));
+    const waShareUrl = `https://api.whatsapp.com/send?text=${text}`;
+    window.open(waShareUrl, "_blank", "noopener,noreferrer");
+    setShareMenuOpenFor(null);
+  };
+  
+  const handleShare = (postId) => {
+    setShareMenuOpenFor(prev => (prev === postId ? null : postId));
+  };  
 
   const toggleLike = (postId) => {
     setLikedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
+
+  // Filter posts based on searchText (case insensitive) in post content or user name
+  const filteredPosts = searchText
+    ? dummyFeeds.filter(
+        (post) =>
+          post.content.toLowerCase().includes(searchText.toLowerCase()) ||
+          post.user.name.toLowerCase().includes(searchText.toLowerCase())
+      )
+    : posts;
+
+    const memoizedProfilePage = useMemo(() => <ProfilePage />, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -110,7 +144,10 @@ const HomePage = () => {
               <FaRegThumbsUp className="text-xl" />
             </button>
             <img
-              src={firebaseUser?.photoURL || "https://randomuser.me/api/portraits/lego/1.jpg"}
+              src={
+                firebaseUser?.photoURL ||
+                "https://randomuser.me/api/portraits/lego/1.jpg"
+              }
               alt="Profile"
               className="w-8 h-8 rounded-full"
             />
@@ -120,44 +157,48 @@ const HomePage = () => {
 
       <div className="pt-16 pb-8 max-w-7xl mx-auto px-4 flex gap-6">
         {/* Left Column: Profile Sidebar */}
-        <div className={`w-full lg:w-1/4 ${showProfileMobile ? "block" : "hidden"} lg:block`}>
+        <div
+          className={`w-full lg:w-1/4 ${
+            showProfileMobile ? "block" : "hidden"
+          } lg:block`}
+        >
           <div className="bg-white rounded-lg shadow-sm top-20 overflow-hidden">
-            <ProfilePage />
+            {memoizedProfilePage}
           </div>
         </div>
 
         {/* Main Feed */}
         <div className="flex-1 max-w-2xl mx-auto">
-          {/* Create Post */}
+          {/* Post - SEARCH BAR * TO SEARCH FO A POST*/}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
             <div className="flex items-center space-x-3">
               <img
-                src={firebaseUser?.photoURL || "https://randomuser.me/api/portraits/lego/1.jpg"}
+                src={
+                  firebaseUser?.photoURL ||
+                  "https://randomuser.me/api/portraits/lego/1.jpg"
+                }
                 alt="User"
                 className="w-10 h-10 rounded-full"
               />
-              <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full py-2 px-4 text-left transition">
-                Start a post
-              </button>
-            </div>
-            <div className="flex justify-between mt-3 pt-3 border-t">
-              <button className="flex items-center text-gray-500 hover:bg-gray-100 px-3 py-1 rounded">
-                <FaRegThumbsUp className="mr-1" /> Like
-              </button>
-              <button className="flex items-center text-gray-500 hover:bg-gray-100 px-3 py-1 rounded">
-                <FaRegCommentDots className="mr-1" /> Comment
-              </button>
-              <button className="flex items-center text-gray-500 hover:bg-gray-100 px-3 py-1 rounded">
-                <FaRegShareSquare className="mr-1" /> Share
-              </button>
+              <input
+                type="text"
+                placeholder="Search posts..."
+                className="flex-1 bg-gray-100 rounded-full py-2 px-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
             </div>
           </div>
 
           {/* Feed Posts */}
-          {posts.map((post, index) => (
+          {filteredPosts.map((post, index) => (
             <div
               key={`${post.id}-${index}`}
-              ref={index === posts.length - 1 ? lastPostRef : null}
+              ref={
+                !searchText && index === filteredPosts.length - 1
+                  ? lastPostRef
+                  : null
+              }
               className="bg-white rounded-lg shadow-sm overflow-hidden mb-4"
             >
               <div className="p-4">
@@ -210,14 +251,46 @@ const HomePage = () => {
                 <button className="flex items-center text-gray-500 hover:bg-gray-100 px-3 py-1 rounded flex-1 justify-center">
                   <FaRegCommentDots className="mr-2" /> Comment
                 </button>
-                <button className="flex items-center text-gray-500 hover:bg-gray-100 px-3 py-1 rounded flex-1 justify-center">
-                  <FaRegShareSquare className="mr-2" /> Share
-                </button>
+ <div className="relative flex-1 flex justify-center">
+  <button
+    onClick={() => handleShare(post.id)}
+    className="flex items-center text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-1.5 rounded-lg flex-1 justify-center transition-colors duration-200"
+  >
+    <FaRegShareSquare className="mr-2 text-lg" />
+    <span className="text-sm font-medium">Share</span>
+  </button>
+
+  {/* Share options popup */}
+  {shareMenuOpenFor === post.id && (
+    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[180px]">
+      <div className="flex space-x-4 px-4 py-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            shareToFacebook(post);
+          }}
+          className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+        >
+          Facebook
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            shareToWhatsApp(post);
+          }}
+          className="text-green-600 hover:text-green-800 font-medium text-sm"
+        >
+          WhatsApp
+        </button>
+      </div>
+    </div>
+  )}
+</div>
               </div>
             </div>
           ))}
 
-          {loading && (
+          {loading && !searchText && (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
             </div>
@@ -226,38 +299,37 @@ const HomePage = () => {
 
         {/* Right Sidebar */}
         <div className="hidden lg:block w-1/4">
-        <div className="bg-white rounded-lg shadow-sm p-4 sticky top-20">
-  <h3 className="font-medium text-gray-700 mb-3">People you may know</h3>
-  <div className="space-y-3">
-    {["Amat Gaye", "Musa Jobe", "Sehou Camara"].map((personName, index) => (
-      <div key={personName} className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <img
-            src={`https://randomuser.me/api/portraits/men/${index + 1}.jpg`}
-            alt={`${personName}'s profile`}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          <span className="text-sm font-medium">{personName}</span>
+  <div className="bg-white rounded-lg shadow-sm p-4 sticky top-20">
+    <h3 className="font-medium text-gray-700 mb-3">People you may know</h3>
+    <div className="space-y-3">
+      {["Amat Gaye", "Musa Jobe", "Sehou Camara"].map((personName, index) => (
+        <div key={personName} className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <img
+              src={`https://randomuser.me/api/portraits/men/${index + 1}.jpg`}
+              alt={personName}
+              className="w-8 h-8 rounded-full"
+            />
+            <span>{personName}</span>
+          </div>
+          <button
+            onClick={() => handleConnect(personName)}
+            className={`px-2 py-1 text-sm rounded ${
+              connectionRequests[personName]
+                ? "bg-gray-300 text-gray-600"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            {connectionRequests[personName] ? "Requested" : "Connect"}
+          </button>
         </div>
-        <button
-          onClick={() => handleConnect(personName)}
-          disabled={connectionRequests[personName]}
-          className={`text-sm font-medium ${
-            connectionRequests[personName]
-              ? "text-gray-500 cursor-default"
-              : "text-blue-600"
-          }`}
-        >
-          {connectionRequests[personName] ? "Request Sent" : "Connect"}
-        </button>
-      </div>
-    ))}
+      ))}
+    </div>
   </div>
 </div>
-        </div>
+
       </div>
 
-      
       <Messaging />
     </div>
   );
