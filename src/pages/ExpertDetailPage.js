@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { users } from "../api/data";
 
 const ExpertDetailPage = () => {
@@ -6,6 +6,8 @@ const ExpertDetailPage = () => {
   const expert = users.find(
     (user) => user.id === Number(id) && user.role === "expert"
   );
+
+  const navigate = useNavigate();
 
   if (!expert) {
     return <div>Expert no more information found</div>;
@@ -84,6 +86,31 @@ const ExpertDetailPage = () => {
             Book an Appointment
           </button>
         )}
+
+        <div className="mt-4">
+          <button
+            onClick={() => navigate("/payment")}
+            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 8c-1.657 0-3 1.343-3 3v3m0 0c0 1.657 1.343 3 3 3s3-1.343 3-3m-3 3v-3m0 0v-3m-6 6H6a2 2 0 01-2-2V9a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2h-1"
+              />
+            </svg>
+            <span>Proceed to Payment</span>
+          </button>
+          <p className="text-xs text-center text-gray-500 mt-2">
+            Your transaction is encrypted and secure.
+          </p>
+        </div>
       </div>
     </div>
   );

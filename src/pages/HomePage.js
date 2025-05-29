@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   FaRegThumbsUp,
   FaRegCommentDots,
@@ -23,7 +29,6 @@ const HomePage = () => {
   const [likedPosts, setLikedPosts] = useState({});
   const [searchText, setSearchText] = useState("");
   const [shareMenuOpenFor, setShareMenuOpenFor] = useState(null);
-
 
   const observer = useRef();
   const postsPerPage = 5;
@@ -82,7 +87,7 @@ const HomePage = () => {
   const handleConnect = (id) => {
     setConnectionRequests((prev) => ({
       ...prev,
-      [id]: !prev[id],  
+      [id]: !prev[id],
     }));
   };
 
@@ -93,17 +98,19 @@ const HomePage = () => {
     window.open(fbShareUrl, "_blank", "noopener,noreferrer");
     setShareMenuOpenFor(null);
   };
-  
+
   const shareToWhatsApp = (post) => {
-    const text = encodeURIComponent(post.content + " " + (post.url || window.location.href));
+    const text = encodeURIComponent(
+      post.content + " " + (post.url || window.location.href)
+    );
     const waShareUrl = `https://api.whatsapp.com/send?text=${text}`;
     window.open(waShareUrl, "_blank", "noopener,noreferrer");
     setShareMenuOpenFor(null);
   };
-  
+
   const handleShare = (postId) => {
-    setShareMenuOpenFor(prev => (prev === postId ? null : postId));
-  };  
+    setShareMenuOpenFor((prev) => (prev === postId ? null : postId));
+  };
 
   const toggleLike = (postId) => {
     setLikedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
@@ -118,7 +125,7 @@ const HomePage = () => {
       )
     : posts;
 
-    const memoizedProfilePage = useMemo(() => <ProfilePage />, []);
+  const memoizedProfilePage = useMemo(() => <ProfilePage />, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -233,7 +240,9 @@ const HomePage = () => {
               </div>
 
               <div className="px-4 py-2 border-t border-b text-sm text-gray-500 flex justify-between">
-                <span>{likedPosts[post.id] ? post.likes + 1 : post.likes} likes</span>
+                <span>
+                  {likedPosts[post.id] ? post.likes + 1 : post.likes} likes
+                </span>
                 <span>{post.comments} comments</span>
               </div>
 
@@ -246,46 +255,47 @@ const HomePage = () => {
                       : "text-gray-500 hover:bg-gray-100"
                   }`}
                 >
-                  <FaRegThumbsUp className="mr-2" /> {likedPosts[post.id] ? "Liked" : "Like"}
+                  <FaRegThumbsUp className="mr-2" />{" "}
+                  {likedPosts[post.id] ? "Liked" : "Like"}
                 </button>
                 <button className="flex items-center text-gray-500 hover:bg-gray-100 px-3 py-1 rounded flex-1 justify-center">
                   <FaRegCommentDots className="mr-2" /> Comment
                 </button>
- <div className="relative flex-1 flex justify-center">
-  <button
-    onClick={() => handleShare(post.id)}
-    className="flex items-center text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-1.5 rounded-lg flex-1 justify-center transition-colors duration-200"
-  >
-    <FaRegShareSquare className="mr-2 text-lg" />
-    <span className="text-sm font-medium">Share</span>
-  </button>
+                <div className="relative flex-1 flex justify-center">
+                  <button
+                    onClick={() => handleShare(post.id)}
+                    className="flex items-center text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-1.5 rounded-lg flex-1 justify-center transition-colors duration-200"
+                  >
+                    <FaRegShareSquare className="mr-2 text-lg" />
+                    <span className="text-sm font-medium">Share</span>
+                  </button>
 
-  {/* Share options popup */}
-  {shareMenuOpenFor === post.id && (
-    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[180px]">
-      <div className="flex space-x-4 px-4 py-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            shareToFacebook(post);
-          }}
-          className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-        >
-          Facebook
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            shareToWhatsApp(post);
-          }}
-          className="text-green-600 hover:text-green-800 font-medium text-sm"
-        >
-          WhatsApp
-        </button>
-      </div>
-    </div>
-  )}
-</div>
+                  {/* Share options popup */}
+                  {shareMenuOpenFor === post.id && (
+                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[180px]">
+                      <div className="flex space-x-4 px-4 py-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            shareToFacebook(post);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                        >
+                          Facebook
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            shareToWhatsApp(post);
+                          }}
+                          className="text-green-600 hover:text-green-800 font-medium text-sm"
+                        >
+                          WhatsApp
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -299,35 +309,43 @@ const HomePage = () => {
 
         {/* Right Sidebar */}
         <div className="hidden lg:block w-1/4">
-  <div className="bg-white rounded-lg shadow-sm p-4 sticky top-20">
-    <h3 className="font-medium text-gray-700 mb-3">People you may know</h3>
-    <div className="space-y-3">
-      {["Amat Gaye", "Musa Jobe", "Sehou Camara"].map((personName, index) => (
-        <div key={personName} className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <img
-              src={`https://randomuser.me/api/portraits/men/${index + 1}.jpg`}
-              alt={personName}
-              className="w-8 h-8 rounded-full"
-            />
-            <span>{personName}</span>
+          <div className="bg-white rounded-lg shadow-sm p-4 sticky top-20">
+            <h3 className="font-medium text-gray-700 mb-3">
+              People you may know
+            </h3>
+            <div className="space-y-3">
+              {["Amat Gaye", "Musa Jobe", "Sehou Camara"].map(
+                (personName, index) => (
+                  <div
+                    key={personName}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src={`https://randomuser.me/api/portraits/men/${
+                          index + 1
+                        }.jpg`}
+                        alt={personName}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <span>{personName}</span>
+                    </div>
+                    <button
+                      onClick={() => handleConnect(personName)}
+                      className={`px-2 py-1 text-sm rounded ${
+                        connectionRequests[personName]
+                          ? "bg-gray-300 text-gray-600"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
+                    >
+                      {connectionRequests[personName] ? "Cancel Request" : "Connect"}
+                    </button>
+                  </div>
+                )
+              )}
+            </div>
           </div>
-          <button
-            onClick={() => handleConnect(personName)}
-            className={`px-2 py-1 text-sm rounded ${
-              connectionRequests[personName]
-                ? "bg-gray-300 text-gray-600"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
-          >
-            {connectionRequests[personName] ? "Requested" : "Connect"}
-          </button>
         </div>
-      ))}
-    </div>
-  </div>
-</div>
-
       </div>
 
       <Messaging />

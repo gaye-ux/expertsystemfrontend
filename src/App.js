@@ -11,6 +11,7 @@ import Signup from "./components/AuthComponent/Signup";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import { SearchProvider } from "./context/SearchContext";
+import PaymentMethod from "./components/PaymentComponent/PaymentMethod";
 
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Route path="/jobseekers/:id" element={<JobSeekerDetailPage />}/>
             <Route path="/recruiters/:id" element={<RecruiterDetailPage />}/>
             <Route path="/signup" element={<Signup />}/>
+            <Route path="/payment" element={<PaymentMethod />} />
             <Route path="/login" element={<Login />}/>
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
