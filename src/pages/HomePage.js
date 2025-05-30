@@ -15,7 +15,6 @@ import {
 import { dummyFeeds } from "../api/dummyFeeds";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
-import { useSearch } from "../context/SearchContext";
 import ProfilePage from "./ProfilePage";
 import Messaging from "../components/MessageComponent/Messaging";
 

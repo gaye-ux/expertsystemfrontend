@@ -1,20 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { FiUser } from "react-icons/fi";
 
 const ProfilePage = () => {
   const [firebaseUser, setFirebaseUser] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setFirebaseUser(currentUser);
+      if (currentUser) {
+        setFirebaseUser(currentUser);
+        assignProfileImage(currentUser.uid); // Use UID to track user session
+      }
     });
 
     return () => unsubscribe();
   }, []);
 
-  if (!firebaseUser) {
+  const assignProfileImage = (uid) => {
+    const key = `profileImageUrl_${uid}`;
+    let imageUrl = sessionStorage.getItem(key);
+
+    if (!imageUrl) {
+      const gender = Math.random() > 0.5 ? "men" : "women";
+      const index = Math.floor(Math.random() * 100);
+      imageUrl = `https://randomuser.me/api/portraits/${gender}/${index}.jpg`;
+      sessionStorage.setItem(key, imageUrl);
+    }
+
+    setProfileImageUrl(imageUrl);
+  };
+
+  if (!firebaseUser || !profileImageUrl) {
     return (
       <div className="pt-24 text-center text-gray-500">Loading profile...</div>
     );
@@ -54,14 +71,12 @@ const ProfilePage = () => {
         <div className="text-center">
           <div className="w-24 h-24 rounded-full mx-auto overflow-hidden mb-4">
             <img
-              src={`https://randomuser.me/api/portraits/${
-                Math.random() > 0.5 ? "men" : "women"
-              }/${Math.floor(Math.random() * 100)}.jpg`}
+              src={profileImageUrl}
               alt="User profile"
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "https://randomuser.me/api/portraits/lego/1.jpg"; // Fallback image
+                e.target.src = "https://randomuser.me/api/portraits/lego/1.jpg";
               }}
             />
           </div>

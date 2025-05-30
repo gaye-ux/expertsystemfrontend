@@ -2,10 +2,26 @@ import React from 'react';
 import { IoCheckmarkDone } from 'react-icons/io5';
 
 const formatTime = (date) => {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Handle cases where date might be undefined, null, or invalid
+  if (!date) return '';
+  
+  // Convert to Date object if it isn't already one
+  const dateObj = date instanceof Date ? date : new Date(date);
+  
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) return '';
+  
+  return dateObj.toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true
+  });
 };
 
 const MessageBubble = ({ message, isSender, timestamp, status }) => {
+  // Add debug logging to help identify issues (remove in production)
+  console.log('MessageBubble timestamp:', timestamp, typeof timestamp);
+  
   return (
     <div className={`flex mb-3 ${isSender ? "justify-end" : "justify-start"}`}>
       <div

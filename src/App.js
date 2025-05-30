@@ -10,11 +10,13 @@ import Login from "./components/AuthComponent/Login";
 import Signup from "./components/AuthComponent/Signup";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
-import { SearchProvider } from "./context/SearchContext";
+import { useEffect } from "react";
 import PaymentMethod from "./components/PaymentComponent/PaymentMethod";
 
 
 function App() {
+
+  
 
   return (
 
