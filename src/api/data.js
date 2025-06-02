@@ -7,7 +7,7 @@ export const users = [
       status: "offline",
       price: "$100/hr",
       photoUrl: "https://randomuser.me/api/portraits/men/1.jpg",
-      whatsapp: "+220 123 4567",
+      whatsapp: "+2207687012",
       email: "jacob.jones@legaladvice.com",
       experience: "10+ years of experience in corporate law, specializing in international business contracts and intellectual property rights. Former partner at Jones & Associates Law Firm."
     },
@@ -30,7 +30,7 @@ export const users = [
       jobTitle: "Entrepreneur",
       interest: "Looking for Legal Advice",
       photoUrl: "https://randomuser.me/api/portraits/men/3.jpg",
-      whatsapp: "+234 801 234 5678",
+      whatsapp: "+2207687012",
       email: "cameron.williams@entrepreneur.com"
     },
     {

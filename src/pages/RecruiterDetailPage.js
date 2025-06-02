@@ -1,24 +1,26 @@
 import { useParams } from 'react-router-dom';
 import { users } from '../api/data';
+import { useState } from 'react';
 
 const RecruiterDetailPage = () => {
   const { id } = useParams();
   const recruiter = users.find(user => user.id === Number(id) && user.role === 'recruiter');
+  const [whatsappMessage, setWhatsappMessage] = useState('');
 
   if (!recruiter) {
     return <div className="text-center p-8 text-red-600">Recruiter not found</div>;
   }
 
-  // Dummy data for demonstration
+  const baseWhatsappUrl = `https://wa.me/${recruiter.whatsapp}`;
+  const whatsappLinkWithMessage = `${baseWhatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`;
+  const emailLink = `mailto:${recruiter.email}`;
+
   const companyDescription = recruiter.companyDescription || "Leading recruitment agency specializing in placing top talent across tech, marketing, and business roles.";
   const industryFocus = recruiter.industryFocus || ["Technology", "Marketing", "Finance"];
   const yearsExperience = recruiter.yearsExperience || 8;
   const notableClients = recruiter.notableClients || ["Google", "Microsoft", "Amazon"];
   const currentOpeningsCount = recruiter.currentOpeningsCount || 12;
   const successRate = recruiter.successRate || "95%";
-
-  const whatsappLink = `https://wa.me/${recruiter.whatsapp}`;
-  const emailLink = `mailto:${recruiter.email}`;
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
@@ -30,7 +32,7 @@ const RecruiterDetailPage = () => {
           className="w-32 h-32 md:w-40 md:h-40 rounded-lg object-cover shadow"
         />
 
-        {/* Main info */}
+        {/* Main Info */}
         <div className="flex-1">
           <h1 className="text-4xl font-bold mb-2">{recruiter.name}</h1>
           <p className="text-lg font-semibold text-gray-700 mb-1">Recruiter</p>
@@ -75,31 +77,43 @@ const RecruiterDetailPage = () => {
 
           {/* Contact Section */}
           <h2 className="text-2xl font-bold mb-4">Contact Recruiter</h2>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col gap-4">
+
+            {/* WhatsApp Message Input and Button */}
             {recruiter.whatsapp && (
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-green-500 text-white rounded shadow hover:bg-green-600 transition"
-              >
-                <img
-                  src="/whatsapp.jpg"
-                  alt="WhatsApp"
-                  className="w-6 h-6"
+              <>
+                <input
+                  type="text"
+                  placeholder="Type your message to recruiter..."
+                  value={whatsappMessage}
+                  onChange={(e) => setWhatsappMessage(e.target.value)}
+                  className="border border-gray-300 rounded px-4 py-2 w-full"
                 />
-                Chat on WhatsApp
-              </a>
+                <a
+                  href={whatsappLinkWithMessage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-green-500 text-white rounded shadow hover:bg-green-600 transition"
+                >
+                  <img
+                    src="/whatsapp.jpg"
+                    alt="WhatsApp"
+                    className="w-6 h-6"
+                  />
+                  Chat on WhatsApp
+                </a>
+              </>
             )}
 
+            {/* Email Button */}
             {recruiter.email && (
               <a
                 href={emailLink}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white rounded shadow hover:bg-blue-700 transition"
               >
                 <svg className="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
                 Email Recruiter
               </a>
             )}

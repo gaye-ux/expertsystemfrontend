@@ -6,23 +6,18 @@ import MessageBubble from './MessageBubble';
 
 const formatTime = (date) => {
   if (!date) return '';
-  // Convert to Date object if it's a string or timestamp
   const dateObj = date instanceof Date ? date : new Date(date);
-  // Check if the date is valid
   if (isNaN(dateObj.getTime())) return '';
   return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 const formatDate = (date) => {
   if (!date) return '';
-  // Convert to Date object if it's a string or timestamp
   const dateObj = date instanceof Date ? date : new Date(date);
-  // Check if the date is valid
   if (isNaN(dateObj.getTime())) return '';
   return dateObj.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 };
 
-// Helper functions for localStorage serialization
 const serializeData = (data) => {
   return JSON.stringify(data, (key, value) => {
     if (value instanceof Date) {
@@ -53,7 +48,24 @@ const Messaging = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Initialize Firebase Auth listener
+  const sortConversations = (conversations) => {
+    return [...conversations].sort((a, b) => {
+      const aLastMsg = a.messages[a.messages.length - 1]?.timestamp || a.createdAt;
+      const bLastMsg = b.messages[b.messages.length - 1]?.timestamp || b.createdAt;
+      return new Date(bLastMsg) - new Date(aLastMsg);
+    });
+  };
+
+  const calculateTotalUnread = () => {
+    return Object.values(unreadCounts).reduce((total, count) => total + count, 0);
+  };
+
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+
+  useEffect(() => {
+    setTotalUnreadCount(calculateTotalUnread());
+  }, [unreadCounts]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -63,13 +75,23 @@ const Messaging = () => {
       } else {
         setConversations([]);
         setAllUsers([]);
+        setUnreadCounts({});
       }
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Load all registered users from localStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === `inbox_${currentUser?.uid}`) {
+        loadUserConversations(currentUser.uid);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentUser]);
+
   const loadAllUsers = () => {
     try {
       const users = deserializeData(localStorage.getItem('all_users') || '[]');
@@ -80,7 +102,34 @@ const Messaging = () => {
     }
   };
 
-  // Register current user in the global users list
+  const loadUserConversations = (userId) => {
+    try {
+      const userInbox = deserializeData(localStorage.getItem(`inbox_${userId}`) || '[]');
+      const sortedConversations = sortConversations(userInbox);
+      setConversations(sortedConversations);
+      
+      const counts = {};
+      sortedConversations.forEach(conv => {
+        counts[conv.otherUserId] = conv.messages.filter(msg => 
+          msg.sender !== userId && msg.status === 'unread'
+        ).length;
+      });
+      setUnreadCounts(counts);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      setConversations([]);
+      setUnreadCounts({});
+    }
+  };
+
+  const saveUserConversations = (userId, conversations) => {
+    try {
+      localStorage.setItem(`inbox_${userId}`, serializeData(conversations));
+    } catch (error) {
+      console.error('Error saving conversations:', error);
+    }
+  };
+
   const registerUser = (user) => {
     try {
       const existingUsers = deserializeData(localStorage.getItem('all_users') || '[]');
@@ -100,7 +149,6 @@ const Messaging = () => {
         localStorage.setItem('all_users', serializeData(updatedUsers));
         setAllUsers(updatedUsers);
       } else {
-        // Update user's online status
         const updatedUsers = existingUsers.map(u => 
           u.uid === user.uid 
             ? { ...u, lastSeen: new Date(), isOnline: true }
@@ -114,45 +162,11 @@ const Messaging = () => {
     }
   };
 
-  // Load conversations for current user
-  const loadUserConversations = (userId) => {
-    try {
-      const userInbox = deserializeData(localStorage.getItem(`inbox_${userId}`) || '[]');
-      setConversations(userInbox);
-      
-      // Calculate unread counts
-      const counts = {};
-      userInbox.forEach(conv => {
-        const unreadMessages = conv.messages.filter(msg => 
-          msg.sender !== userId && msg.status === 'unread'
-        ).length;
-        counts[conv.id] = unreadMessages;
-      });
-      setUnreadCounts(counts);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-      setConversations([]);
-    }
-  };
-
-  // Save conversations to localStorage
-  const saveUserConversations = (userId, conversations) => {
-    try {
-      localStorage.setItem(`inbox_${userId}`, serializeData(conversations));
-    } catch (error) {
-      console.error('Error saving conversations:', error);
-    }
-  };
-
-  // Create or get existing conversation
   const createOrGetConversation = (otherUser) => {
     const existingConv = conversations.find(conv => conv.otherUserId === otherUser.uid);
-    
-    if (existingConv) {
-      return existingConv;
-    }
+    if (existingConv) return existingConv;
 
-    const newConversation = {
+    return {
       id: `${currentUser.uid}_${otherUser.uid}`,
       otherUserId: otherUser.uid,
       name: otherUser.displayName,
@@ -161,11 +175,8 @@ const Messaging = () => {
       messages: [],
       createdAt: new Date()
     };
-
-    return newConversation;
   };
 
-  // Send message
   const sendMessage = async (receiverId, messageText) => {
     if (!currentUser || !messageText.trim()) return;
 
@@ -182,7 +193,6 @@ const Messaging = () => {
     };
 
     try {
-      // Update sender's conversation
       const senderConversations = [...conversations];
       let senderConvIndex = senderConversations.findIndex(conv => conv.otherUserId === receiverId);
       
@@ -195,17 +205,14 @@ const Messaging = () => {
         senderConversations[senderConvIndex].messages.push(newMessage);
       }
 
-      setConversations(senderConversations);
-      saveUserConversations(currentUser.uid, senderConversations);
+      const sortedConversations = sortConversations(senderConversations);
+      setConversations(sortedConversations);
+      saveUserConversations(currentUser.uid, sortedConversations);
 
-      // Update receiver's inbox
       const receiverInbox = deserializeData(localStorage.getItem(`inbox_${receiverId}`) || '[]');
       let receiverConvIndex = receiverInbox.findIndex(conv => conv.otherUserId === currentUser.uid);
 
-      const messageForReceiver = {
-        ...newMessage,
-        status: 'unread'
-      };
+      const messageForReceiver = { ...newMessage, status: 'unread' };
 
       if (receiverConvIndex === -1) {
         const newReceiverConv = {
@@ -220,11 +227,20 @@ const Messaging = () => {
         receiverInbox.push(newReceiverConv);
       } else {
         receiverInbox[receiverConvIndex].messages.push(messageForReceiver);
+        
+        if (receiverId === currentUser.uid) {
+          const newUnreadCount = receiverInbox[receiverConvIndex].messages.filter(
+            msg => msg.sender !== currentUser.uid && msg.status === 'unread'
+          ).length;
+          setUnreadCounts(prev => ({
+            ...prev,
+            [currentUser.uid]: newUnreadCount
+          }));
+        }
       }
 
-      localStorage.setItem(`inbox_${receiverId}`, serializeData(receiverInbox));
+      localStorage.setItem(`inbox_${receiverId}`, serializeData(sortConversations(receiverInbox)));
 
-      // Simulate message delivery status update
       setTimeout(() => {
         const updatedConversations = conversations.map(conv => {
           if (conv.otherUserId === receiverId) {
@@ -237,8 +253,9 @@ const Messaging = () => {
           }
           return conv;
         });
-        setConversations(updatedConversations);
-        saveUserConversations(currentUser.uid, updatedConversations);
+        const sortedUpdated = sortConversations(updatedConversations);
+        setConversations(sortedUpdated);
+        saveUserConversations(currentUser.uid, sortedUpdated);
       }, 1000);
 
     } catch (error) {
@@ -246,17 +263,14 @@ const Messaging = () => {
     }
   };
 
-  // Handle sending message in UI
   const handleSend = () => {
     if (!input.trim() || !activeChat) return;
-
     sendMessage(activeChat, input);
     setInput("");
   };
 
-  // Start new conversation
   const startConversation = (otherUser) => {
-    if (otherUser.uid === currentUser.uid) return; // Can't message yourself
+    if (otherUser.uid === currentUser.uid) return;
 
     const existingConv = conversations.find(conv => conv.otherUserId === otherUser.uid);
     
@@ -264,77 +278,70 @@ const Messaging = () => {
       setActiveChat(existingConv.otherUserId);
     } else {
       const newConv = createOrGetConversation(otherUser);
-      const updatedConversations = [...conversations, newConv];
+      const updatedConversations = sortConversations([...conversations, newConv]);
       setConversations(updatedConversations);
       saveUserConversations(currentUser.uid, updatedConversations);
       setActiveChat(newConv.otherUserId);
     }
   };
 
-  // Handle chat selection
   const handleChatSelect = (chatId) => {
     setActiveChat(chatId);
     
-    // Mark messages as read
     const updatedConversations = conversations.map(conv => {
       if (conv.otherUserId === chatId) {
-        return {
-          ...conv,
-          messages: conv.messages.map(msg => 
-            msg.sender !== currentUser.uid ? { ...msg, status: 'read' } : msg
-          )
-        };
+        const unreadMessages = conv.messages.filter(msg => 
+          msg.sender !== currentUser.uid && msg.status === 'unread'
+        );
+        
+        if (unreadMessages.length > 0) {
+          return {
+            ...conv,
+            messages: conv.messages.map(msg => 
+              msg.sender !== currentUser.uid ? { ...msg, status: 'read' } : msg
+            )
+          };
+        }
+        return conv;
       }
       return conv;
     });
     
     setConversations(updatedConversations);
     saveUserConversations(currentUser.uid, updatedConversations);
-    setUnreadCounts(prev => ({ ...prev, [chatId]: 0 }));
+    
+    setUnreadCounts(prev => ({ 
+      ...prev, 
+      [chatId]: 0 
+    }));
   };
 
-  // Register user when component mounts and user is authenticated
   useEffect(() => {
     if (currentUser) {
       registerUser(currentUser);
     }
   }, [currentUser]);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversations, activeChat, isTyping]);
 
-  // Get active conversation
   const activeConversation = conversations.find(c => c.otherUserId === activeChat);
+  const toggleMessaging = () => setIsOpen(!isOpen);
 
-  // Toggle messaging window
-  const toggleMessaging = () => {
-    setIsOpen(!isOpen);
-  };
-
-  // Filter conversations based on search
   const filteredConversations = conversations.filter(conv =>
     conv.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Filter available users (excluding current user and existing conversations)
   const availableUsers = allUsers.filter(user => 
     user.uid !== currentUser?.uid &&
     user.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate total unread count
-  const totalUnreadCount = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
-
-  // Don't render if user is not authenticated
-  if (!currentUser) {
-    return null;
-  }
+  if (!currentUser) return null;
 
   return (
     <>
-      {/* Floating Message Button */}
       <div className="fixed bottom-5 right-5 z-50">
         <div className="relative">
           {totalUnreadCount > 0 && (
@@ -353,7 +360,6 @@ const Messaging = () => {
 
       {isOpen && (
         <div className="fixed bottom-20 right-5 w-full max-w-lg h-[80vh] bg-gray-50 rounded-lg shadow-xl flex flex-col overflow-hidden z-50">
-          {/* Header */}
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
             <h2 className="text-xl font-semibold">Messages</h2>
             <button onClick={toggleMessaging} className="text-gray-500 hover:text-gray-700">
@@ -363,11 +369,8 @@ const Messaging = () => {
             </button>
           </div>
 
-          {/* Main */}
           <div className="flex flex-1 overflow-hidden">
-            {/* Sidebar */}
             <div className="w-1/3 border-r border-gray-200 bg-white flex flex-col">
-              {/* Search */}
               <div className="p-3 border-b border-gray-200">
                 <div className="relative">
                   <FiSearch className="absolute left-3 top-2.5 text-gray-400" />
@@ -381,9 +384,7 @@ const Messaging = () => {
                 </div>
               </div>
 
-              {/* Conversation List */}
               <div className="flex-1 overflow-y-auto">
-                {/* Existing Conversations */}
                 {filteredConversations.map(conversation => (
                   <div
                     key={conversation.id}
@@ -415,7 +416,6 @@ const Messaging = () => {
                   </div>
                 ))}
 
-                {/* Available Users to Start New Conversations */}
                 {searchTerm && availableUsers.length > 0 && (
                   <div className="border-t border-gray-200 pt-2">
                     <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -439,7 +439,6 @@ const Messaging = () => {
               </div>
             </div>
 
-            {/* Chat */}
             <div className="flex-1 flex flex-col">
               {activeConversation ? (
                 <>
@@ -459,7 +458,6 @@ const Messaging = () => {
                     </div>
                   </div>
 
-                  {/* Messages */}
                   <div className="flex-1 p-3 overflow-y-auto bg-gray-50">
                     <div className="text-center mb-3">
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -492,7 +490,6 @@ const Messaging = () => {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Input */}
                   <div className="p-2 border-t border-gray-200 bg-white">
                     <div className="flex items-center">
                       <button className="text-gray-500 hover:text-gray-700 mx-1"><FiPaperclip size={18} /></button>
